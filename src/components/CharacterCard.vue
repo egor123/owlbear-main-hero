@@ -94,7 +94,7 @@ async function update(value: Character) {
   await OBR.scene.items.updateItems(
     (item) => item.id == props.character.id,
     (items: any[]) => {
-      if (value.selectedTokenId && items && items.length > 0 && items[0]) {
+      if (items && items.length > 0 && items[0]) {
         updateItem(items[0], value);
       }
     },
@@ -222,7 +222,12 @@ function updateLabelStyle(style: LabelStyle) {
           />
         </div>
       </div>
-
+      <input
+        type="color"
+        title="Label color"
+        :value="character.color"
+        @change="character.color = ($event.target as HTMLInputElement).value"
+      />
       <button @click="focus(character.id)" title="Focus">F</button>
       <button @click="emit('moveUp', character.id)" title="Move Up">⬆</button>
       <button @click="emit('moveDown', character.id)" title="Move Down">
@@ -282,6 +287,13 @@ function updateLabelStyle(style: LabelStyle) {
   border-radius: 8px;
   margin: 0;
   padding: 0 10px 0 10px;
+}
+.header input[type="color"] {
+  flex: none;
+  width: 22px;
+  padding: 0;
+  border: none;
+  background: none;
 }
 
 /* Small icon buttons */

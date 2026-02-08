@@ -25,6 +25,7 @@ function createCharacter() {
     const defaultCharacter: Character = {
         id: crypto.randomUUID(),
         name: "",
+        color: "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0"),
         collapsed: false,
         label: "",
         labelStyle: {color: "#ffffff", size: 24, font: "Roboto"},
@@ -59,7 +60,7 @@ export const usePlayerStore = defineStore("player", () => {
         data.value.selectedCharacterId = id;
         if ((await OBR.player.getRole()) == "PLAYER" && currentCharacter.value) {
             OBR.player.setName(currentCharacter.value.name)
-            //TODO colors etc...
+            OBR.player.setColor(currentCharacter.value.color)
         }
     }
 

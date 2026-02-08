@@ -388,6 +388,7 @@ onUnmounted(() => {
 <template>
   <CharacterCard
     v-for="charcter in store.data.characters"
+    :key="charcter.id"
     :character="charcter"
     :selected="store.currentCharacterID === charcter.id"
     @select-character="store.selectCharacter"

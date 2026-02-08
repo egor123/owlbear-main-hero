@@ -14,6 +14,7 @@ export interface LightData{
 export interface Character {
     id: string;
     name: string;
+    color: string;
     collapsed: boolean;
     label: string;
     labelStyle: LabelStyle;

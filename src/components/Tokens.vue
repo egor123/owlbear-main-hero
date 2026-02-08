@@ -28,7 +28,7 @@ async function openImageSelector() {
   emit("update", {
     ...props.tokens,
   });
-  if (Object.keys(props.tokens).length === 1)
+  if (!props.selectedTokenId && loadedImgs.length >= 1)
     emit("selectToken", Object.keys(props.tokens)[0] as string);
 }
 
