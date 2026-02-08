@@ -20,6 +20,7 @@ async function openImageSelector() {
     .forEach((t) => {
       props.tokens[crypto.randomUUID()] = {
         label: t.text.plainText,
+        labelType: "ADD",
         image: t.image,
         grid: t.grid,
       };
@@ -27,7 +28,8 @@ async function openImageSelector() {
   emit("update", {
     ...props.tokens,
   });
-  console.log(props.tokens);
+  if (Object.keys(props.tokens).length === 1)
+    emit("selectToken", Object.keys(props.tokens)[0] as string);
 }
 
 function selectToken(id: string) {
@@ -93,6 +95,15 @@ function moveTokenDown(key: string) {
           @click.stop
         />
 
+        <button
+          class="icon-btn"
+          title="Move up"
+          @click="
+            token.labelType = token.labelType == 'ADD' ? 'REPLACE' : 'ADD'
+          "
+        >
+          {{ token.labelType == "ADD" ? "A" : "R" }}
+        </button>
         <!-- Move up -->
         <button class="icon-btn" title="Move up" @click="moveTokenUp(key)">
           ⬆

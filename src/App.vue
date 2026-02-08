@@ -24,7 +24,7 @@ let isMoving = false;
 let gridDpi = 150;
 
 // ---- Subscriptions ----
-let unsubscribe: any[] = [];
+const unsubscribe: any[] = [];
 // let interaction;
 
 // ---- Movement ----
@@ -247,7 +247,7 @@ function lightFilter(item: Item) {
 }
 
 async function updateLights(items: Item[]) {
-  // if ((await OBR.player.getRole()) === "GM") return;
+  if ((await OBR.player.getRole()) === "GM") return;
   const lights = items.filter(lightFilter);
   const id = store.currentCharacterID;
   let playerIsVisible = false;
@@ -285,7 +285,9 @@ async function spawnCharacter(pos: Vector2) {
   if (!img) return;
 
   let label = char.name;
-  if (img?.label) label += ` (${img.label})`;
+  if (img.labelType === "ADD" && img?.label) label += ` (${img.label})`;
+  else if (img.labelType === "REPLACE") label = img.label;
+
   const metadata = JSON.parse(JSON.stringify(char.metadata));
 
   const item = buildImage(img.image, img.grid)
@@ -299,6 +301,10 @@ async function spawnCharacter(pos: Vector2) {
     .metadata(metadata)
     .plainText(label)
     .build();
+  item.text.style.fontSize = char.labelStyle.size;
+  item.text.style.fillColor = char.labelStyle.color;
+  item.text.style.fontFamily = char.labelStyle.font;
+
   await OBR.scene.items.addItems([item]);
 }
 
@@ -380,7 +386,6 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <button @click="store.addNewCharacter">New</button>
   <CharacterCard
     v-for="charcter in store.data.characters"
     :character="charcter"
@@ -390,4 +395,5 @@ onUnmounted(() => {
     @move-up="store.moveCharacterUp"
     @move-down="store.moveCharacterDown"
   />
+  <button @click="store.addNewCharacter">New</button>
 </template>

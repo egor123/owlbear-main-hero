@@ -1,10 +1,26 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import OBR, { type Grid } from "@owlbear-rodeo/sdk";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 const props = defineProps<{
   data: any;
 }>();
 
+const unsubscribe: any[] = [];
+
+function onGridChange(grid: Grid) {
+  dpi.value = grid.dpi;
+}
+
+onMounted(() => {
+  OBR.onReady(async () => {
+      unsubscribe.push(OBR.scene.grid.onChange(onGridChange));
+  });
+});
+
+onUnmounted(() => {
+  unsubscribe.forEach((f) => f?.());
+});
 const dpi = ref<number>(150); //TODO
 
 const emit = defineEmits<{
@@ -17,7 +33,8 @@ function update(partial: Partial<any>) {
 }
 
 const type = computed<"NORMAL" | "FLASHLIGHT">(() => {
-  if (!props.data) return "NORMAL";
+  if (!props.data || (!props.data.innerAngle && !props.data.outerAngle))
+    return "NORMAL";
   return props.data.innerAngle === 360 && props.data.outerAngle === 360
     ? "NORMAL"
     : "FLASHLIGHT";
@@ -35,8 +52,8 @@ const smooth = computed<boolean>(() => {
 
 function swapType() {
   if (type.value == "NORMAL")
-    update({ innerAngle: 45, outerAngle: 60, sourceRadius: dpi.value * 3 });
-  else update({ innerAngle: 360, outerAngle: 360, sourceRadius: 25 });
+    update({ innerAngle: 45, outerAngle: 60 });
+  else update({ innerAngle: 360, outerAngle: 360 });
 }
 
 function setRange(value: number) {
@@ -100,7 +117,8 @@ function toggleSmoothness() {
   cursor: pointer;
 
   background: #3a3a3a;
-  color: #bbb;}
+  color: #bbb;
+}
 
 .range {
   display: flex;

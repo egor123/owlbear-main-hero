@@ -22,11 +22,12 @@ function loadFromStorage(): PlayerData {
     };
 }
 function createCharacter() {
-    const defaultCharacter = {
+    const defaultCharacter: Character = {
         id: crypto.randomUUID(),
         name: "",
         collapsed: false,
         label: "",
+        labelStyle: {color: "#ffffff", size: 24, font: "Roboto"},
         scale: { x: 1, y: 1 },
         metadata: {},
         selectedTokenId: null,

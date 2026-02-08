@@ -27,7 +27,7 @@ const palette = [
   "rgb(61 84 131)",
 ];
 
-const color = computed(() => palette[props.tracker.color] ?? palette[0]);
+const color = computed(() => palette[props.tracker.color ?? 0] ?? palette[0]);
 
 function updateValue(expr: string) {
   if (expr.trim() === "" || expr.trim() === "-") return;
@@ -35,7 +35,6 @@ function updateValue(expr: string) {
   if (/^[0-9+\-*/().\s]+$/.test(expr)) {
     try {
       value = Math.round(evaluate(expr));
-      console.log(value);
     } catch {
       return;
     }
@@ -51,7 +50,6 @@ function updateMaxValue(expr: string) {
   if (/^[0-9+\-*/().\s]+$/.test(expr)) {
     try {
       max = Math.round(evaluate(expr));
-      console.log(max);
     } catch {
       return;
     }
@@ -69,7 +67,7 @@ function updateChecked(checked: boolean) {
 }
 
 function inc(delta: number) {
-  const value = props.tracker.value + delta;
+  const value = (props.tracker.value ?? 0) + delta;
   emit("update", {
     ...props.tracker,
     value,
@@ -95,7 +93,7 @@ function setColor(index: number) {
       v-if="tracker.variant === 'checkbox'"
       type="checkbox"
       class="checkbox"
-      :checked="tracker.checked !== null ? tracker.checked : false"
+      :checked="tracker.checked ?? true"
       @change="updateChecked(($event.target as HTMLInputElement).checked)"
     />
 
@@ -103,7 +101,7 @@ function setColor(index: number) {
     <input
       v-else-if="tracker.variant === 'value'"
       class="number"
-      :value="tracker.value"
+      :value="tracker.value ?? 0"
       @input="updateValue(($event.target as HTMLInputElement).value)"
     />
 
@@ -112,7 +110,7 @@ function setColor(index: number) {
       <button @click="inc(-1)">-</button>
       <input
         type="number"
-        :value="tracker.value"
+        :value="tracker.value ?? 0"
         @input="updateValue(($event.target as HTMLInputElement).value)"
       />
       <button @click="inc(1)">+</button>
@@ -128,18 +126,18 @@ function setColor(index: number) {
             0,
             Math.min(
               100,
-              tracker.max ? (tracker.value / tracker.max) * 100 : 0,
+              tracker.max ? ((tracker.value ?? 0) / tracker.max) * 100 : 0,
             ),
           ) + '%',
       }"
     >
       <input
-        :value="tracker.value"
+        :value="tracker.value ?? 0"
         @input="updateValue(($event.target as HTMLInputElement).value)"
       />
       /
       <input
-        :value="tracker.max"
+        :value="tracker.max ?? 0"
         @input="updateMaxValue(($event.target as HTMLInputElement).value)"
       />
     </div>
@@ -157,15 +155,15 @@ function setColor(index: number) {
     <!-- Show / Hide on map -->
     <button
       class="icon-btn"
-      :title="tracker.showOnMap ? 'Hide on map' : 'Show on map'"
+      :title="(tracker.showOnMap ?? true) ? 'Hide on map' : 'Show on map'"
       @click="
         emit('update', {
           ...tracker,
-          showOnMap: !tracker.showOnMap,
+          showOnMap: !(tracker.showOnMap ?? true),
         })
       "
     >
-      {{ tracker.showOnMap ? "👁️" : "🚫" }}
+      {{ (tracker.showOnMap ?? true) ? "👁️" : "🚫" }}
     </button>
 
     <!-- Color picker -->
@@ -200,7 +198,6 @@ function setColor(index: number) {
   font-size: 12px;
   font-weight: 600;
   gap: 4px;
-  padding-right: 4px;
   border-radius: 6px;
   border: 1px solid #767676;
   border-left: 4px solid var(--accent);

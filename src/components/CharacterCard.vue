@@ -8,12 +8,14 @@ import type {
   OwlTracker,
   Dictionary,
   Initiative,
+  LabelStyle,
 } from "../scripts/types.ts";
 import Tracker from "./Tracker.vue";
 import Tokens from "./Tokens.vue";
 import InitiativePanel from "./InitiativePanel.vue";
 import LightPanel from "./LightPanel.vue";
 import { focus } from "../scripts/playerUtils.ts";
+import LabelPanel from "./LabelPanel.vue";
 // ---- Props ----
 const props = defineProps<{
   character: Character;
@@ -41,9 +43,11 @@ async function updateLightData(updated: any) {
 }
 
 const initiative = computed<Initiative | null>(() => {
-  return props.character.metadata[
-    "rodeo.owlbear.initiative-tracker/metadata"
-  ] as Initiative;
+  return (
+    (props.character.metadata[
+      "rodeo.owlbear.initiative-tracker/metadata"
+    ] as Initiative) ?? null
+  );
 });
 
 function updateTracker(updated: OwlTracker) {
@@ -69,13 +73,20 @@ function updateItem(item: any, value: Character) {
   if (token) {
     item.image = token.image;
     item.grid = token.grid;
-    console.log(token);
   }
+  item.text.style.fontSize = value.labelStyle.size;
+  item.text.style.fillColor = value.labelStyle.color;
+  item.text.style.fontFamily = value.labelStyle.font;
+
   item.name = value.name;
   item.scale = { x: value.scale.x, y: value.scale.y };
   item.metadata = metadata;
   item.text.plainText = value.name;
-  if (token?.label) item.text.plainText += ` (${token.label})`;
+  if (token) {
+    if (token.labelType === "ADD" && token?.label)
+      item.text.plainText += ` (${token.label})`;
+    else if (token.labelType === "REPLACE") item.text.plainText = token.label;
+  }
 }
 
 async function update(value: Character) {
@@ -97,9 +108,14 @@ async function onChange(items: any[]) {
     if (lastChange == null || d > lastChange) {
       lastChange = d;
       //TODO better checks (?!)
-      // if (data.value.name != playerItem.name) data.value.name = playerItem.name;
-      // if (data.value.scale != playerItem.scale)
-      //   data.value.scale = playerItem.scale;
+      if (
+        props.character.scale.x != playerItem.scale.x ||
+        props.character.scale.y != playerItem.scale.y
+      )
+        props.character.scale = {
+          x: playerItem.scale.x,
+          y: playerItem.scale.y,
+        };
       const m1j = JSON.stringify(props.character.metadata);
       const m2j = JSON.stringify(playerItem.metadata);
       const metadata = JSON.parse(m2j);
@@ -172,6 +188,10 @@ function updateTokens(tokens: Dictionary<Token>) {
 function selectToken(id: string | null) {
   props.character.selectedTokenId = id;
 }
+
+function updateLabelStyle(style: LabelStyle) {
+  props.character.labelStyle = style;
+}
 </script>
 
 <template>
@@ -188,13 +208,27 @@ function selectToken(id: string | null) {
         {{ character.collapsed ? "▶" : "▼" }}
       </button>
 
-      <button @click="emit('selectCharacter', character.id)">Select</button>
+      <button @click="emit('selectCharacter', character.id)" title="Select">
+        S
+      </button>
 
-      <input v-model="character.name" type="text" placeholder="Enter name" />
-      <button @click="focus(character.id)">F</button>
-      <button @click="emit('moveUp', character.id)">⬆</button>
-      <button @click="emit('moveDown', character.id)">⬇</button>
-      <button @click="showDeleteCharacterConfirm">X</button>
+      <div class="name-wrapper">
+        <input v-model="character.name" type="text" placeholder="Enter name" />
+
+        <div class="label-panel-popover">
+          <LabelPanel
+            :labelStyle="character.labelStyle"
+            @update="updateLabelStyle"
+          />
+        </div>
+      </div>
+
+      <button @click="focus(character.id)" title="Focus">F</button>
+      <button @click="emit('moveUp', character.id)" title="Move Up">⬆</button>
+      <button @click="emit('moveDown', character.id)" title="Move Down">
+        ⬇
+      </button>
+      <button @click="showDeleteCharacterConfirm" title="Delete">✕</button>
     </div>
 
     <!-- Foldable body -->
@@ -230,15 +264,24 @@ function selectToken(id: string | null) {
   padding: 10px;
   margin: 0;
 }
+
 .player-card.selected {
   border: 1px solid #3b82f6;
-} 
+}
+
+.player-card.selected .header {
+  border: 1px solid #3b82f6;
+}
 
 /* Header layout */
 .header {
   display: flex;
   align-items: center;
   gap: 4px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin: 0;
+  padding: 0 10px 0 10px;
 }
 
 /* Small icon buttons */
@@ -260,6 +303,26 @@ function selectToken(id: string | null) {
   background: #3a3a3a;
 }
 
+.name-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+/* Floating label settings panel */
+.label-panel-popover {
+  display: none;
+  position: absolute;
+  top: calc(100%);
+  left: 0;
+  z-index: 20;
+
+  width: fit-content;
+}
+
+.name-wrapper:focus-within .label-panel-popover {
+  display: block;
+}
+
 /* Fold button slightly larger / clearer */
 .fold-btn {
   font-size: 13px;
@@ -269,7 +332,8 @@ function selectToken(id: string | null) {
 .header input {
   flex: 1;
   min-width: 0;
-
+  /* max-width: fit-content; */
+  /* width:auto; */
   height: 26px;
   padding: 4px 6px;
 
@@ -292,5 +356,9 @@ function selectToken(id: string | null) {
 /* Selected card accent */
 .player-card.selected .header input {
   border-color: #3b82f6;
+}
+
+.card-body {
+  margin-top: 10px;
 }
 </style>
