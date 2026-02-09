@@ -97,7 +97,7 @@ function moveTokenDown(key: string) {
 
         <button
           class="icon-btn"
-          title="Move up"
+          title="Change Label Type"
           @click="
             token.labelType = token.labelType == 'ADD' ? 'REPLACE' : 'ADD'
           "

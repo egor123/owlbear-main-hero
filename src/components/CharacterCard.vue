@@ -26,7 +26,7 @@ const emit = defineEmits<{
   (e: "update", value: Character): void;
   (e: "moveUp", value: string): void;
   (e: "moveDown", value: string): void;
-  (e: "selectCharacter", value: string): void;
+  (e: "selectCharacter", value: string | null): void;
   (e: "deleteCharacter", value: string): void;
 }>();
 
@@ -208,7 +208,7 @@ function updateLabelStyle(style: LabelStyle) {
         {{ character.collapsed ? "▶" : "▼" }}
       </button>
 
-      <button @click="emit('selectCharacter', character.id)" title="Select">
+      <button @click="emit('selectCharacter', selected ? null : character.id)" title="Select">
         S
       </button>
 
@@ -224,7 +224,7 @@ function updateLabelStyle(style: LabelStyle) {
       </div>
       <input
         type="color"
-        title="Label color"
+        title="Character Color"
         :value="character.color"
         @change="character.color = ($event.target as HTMLInputElement).value"
       />

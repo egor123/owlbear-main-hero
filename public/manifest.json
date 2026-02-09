@@ -1,9 +1,9 @@
 {
-  "name": "Hello, World!",
+  "name": "Main Hero",
   "version": "1.0.0",
   "manifest_version": 1,
   "action": {
-    "title": "Hello, World!",
+    "title": "Main Hero",
     "icon": "/icon.svg",
     "popover": "/",
     "height": 600,

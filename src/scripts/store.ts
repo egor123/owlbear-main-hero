@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import type { PlayerData, Character } from "../scripts/types";
 import OBR from "@owlbear-rodeo/sdk";
+import { focus } from "./playerUtils";
 
 const STORAGE_KEY = "com.lostbyte.mainhero/data";
 
@@ -58,6 +59,7 @@ export const usePlayerStore = defineStore("player", () => {
 
     async function selectCharacter(id: string | null) {
         data.value.selectedCharacterId = id;
+        if(id) focus(id, false);
         if ((await OBR.player.getRole()) == "PLAYER" && currentCharacter.value) {
             OBR.player.setName(currentCharacter.value.name)
             OBR.player.setColor(currentCharacter.value.color)

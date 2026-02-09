@@ -21,7 +21,9 @@ const PREANIMATION_DELAY = 20;
 // ---- state ----
 let player: Item | null = null;
 let isMoving = false;
+let isCameraAnimated = false;
 let gridDpi = 150;
+let targetPos: Vector2 | null = null;
 
 // ---- Subscriptions ----
 const unsubscribe: any[] = [];
@@ -29,32 +31,86 @@ const unsubscribe: any[] = [];
 
 // ---- Movement ----
 
+async function moveCamera() {
+  if (!player || isCameraAnimated) return;
+  isCameraAnimated = true;
+
+  const accel = 15;
+  const damping = 10;
+  const fadeOutTime = 500;
+
+  let lastTime = performance.now();
+  let stopTime = lastTime;
+
+  let velocity = { x: 0, y: 0 };
+
+  const stop = () => {
+    isCameraAnimated = false;
+  };
+
+  async function animate(now: number) {
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+
+    const [width, height, scale, position] = await Promise.all([
+      OBR.viewport.getWidth(),
+      OBR.viewport.getHeight(),
+      OBR.viewport.getScale(),
+      OBR.viewport.getPosition(),
+    ]);
+
+    const offset = { x: width / 2, y: height / 2 };
+    const cameraPos = Math2.subtract(position, offset);
+
+    if (targetPos) {
+      const desiredPos = Math2.multiply(targetPos, -scale);
+      const toTarget = Math2.subtract(desiredPos, cameraPos);
+
+      const accelFactor = isMoving
+        ? accel
+        : Math.max(0, 1 - (now - stopTime) / fadeOutTime) * accel;
+
+      velocity = Math2.add(
+        velocity,
+        Math2.multiply(toTarget, accelFactor * dt),
+      );
+
+      const damp = Math.exp(-damping * dt);
+      velocity = Math2.multiply(velocity, damp);
+
+      const nextPos = Math2.add(cameraPos, Math2.multiply(velocity, dt));
+
+      await OBR.viewport.setPosition(Math2.add(nextPos, offset));
+    }
+
+    if (isMoving) stopTime = now;
+    else if (now >= stopTime + fadeOutTime) {
+      stop();
+      return;
+    }
+    lastTime = now;
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
 async function movePlayer() {
   if (!player || isMoving) return;
+
   const currentPlayerId = player.id;
   isMoving = true;
 
   const o = gridDpi / 2;
   let startTime = performance.now();
-  let lastTime = startTime;
   let startPos: Vector2 | null = null;
-  let targetPos: Vector2 | null = null;
   let targetAngle = 0;
-  let cameraPos = await OBR.viewport.getPosition();
-  const width = await OBR.viewport.getWidth();
-  const height = await OBR.viewport.getHeight();
-  const scale = await OBR.viewport.getScale();
-
+  targetPos = null;
   await new Promise((resolve) => setTimeout(resolve, PREANIMATION_DELAY));
 
   let interaction = await OBR.interaction.startItemInteraction(player);
   const [update, stop] = interaction;
 
   async function animate(now: number) {
-    const lerp = (start: number, end: number, speed: number) =>
-      start + (end - start) * speed;
     const t = Math.min((now - startTime) / ANIMATION_DURATION, 1);
-    const d = Math.min(1, (now - lastTime) / 1000);
     // const eased = 1 - Math.pow(1 - t, 3); // TODO try different funcs + durations
     const eased = t;
     let skip = false;
@@ -110,13 +166,7 @@ async function movePlayer() {
         y: startPos.y + (targetPos.y - startPos.y) * eased,
       };
 
-      const viewportPos = {
-        x: lerp(cameraPos.x, targetPos.x * -scale + width / 2, d * 0.02),
-        y: lerp(cameraPos.y, targetPos.y * -scale + height / 2, d * 0.02),
-      };
-      OBR.viewport.setScale(scale);
-      OBR.viewport.setPosition(viewportPos);
-      cameraPos = viewportPos;
+      moveCamera();
       update((item) => {
         item.position = currentPos;
       });
@@ -134,7 +184,6 @@ async function movePlayer() {
       } else {
         // clear state + continue
         startTime = performance.now();
-        lastTime = startTime;
         startPos = { x: targetPos.x, y: targetPos.y };
         targetPos = null;
         requestAnimationFrame(animate);
