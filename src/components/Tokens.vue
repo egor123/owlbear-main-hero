@@ -41,6 +41,9 @@ function removeToken(id: string) {
   emit("update", {
     ...props.tokens,
   });
+  if (!props.selectedTokenId && Object.keys(props.tokens).length > 0) {
+    emit("selectToken", Object.keys(props.tokens)[0] as string);
+  }
 }
 
 function moveTokenUp(key: string) {
@@ -91,6 +94,7 @@ function moveTokenDown(key: string) {
         <input
           v-model="token.label"
           class="token-name"
+          type="text"
           placeholder="Unnamed"
           @click.stop
         />
@@ -140,18 +144,22 @@ function moveTokenDown(key: string) {
   align-items: center;
   font-size: 12px;
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
   margin-bottom: 6px;
 }
 
 .add-btn {
-  border: none;
+  /* border: none;
   background: #e6f0ff;
   color: #2563eb;
   font-size: 14px;
   border-radius: 4px;
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 2px 6px; */
+
+  padding: 3px 6px;
+  /* text-align: center;
+  justify-content: center; */
 }
 
 /* Token list */
@@ -169,7 +177,7 @@ function moveTokenDown(key: string) {
   align-items: center;
   gap: 6px;
   padding: 4px;
-  border-radius: 6px;
+  border-radius: 16px;
   cursor: pointer;
   border: 1px solid transparent;
 }
@@ -181,7 +189,7 @@ function moveTokenDown(key: string) {
 /* Selected state */
 .token-row.selected {
   /* background: #eef4ff; */
-  border-color: #3b82f6;
+  border-color: var(--primary-light);
 }
 
 /* Token image */
@@ -195,23 +203,13 @@ function moveTokenDown(key: string) {
 /* Token name */
 .token-name {
   flex: 1;
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  padding: 2px 4px;
-}
-
-.token-name:focus {
-  outline: none;
-  background: #3c3c3c;
-  border-radius: 4px;
 }
 
 /* Remove button */
 .remove-btn {
   border: none;
   background: transparent;
-  color: #999;
+  color: var(--text-disabled);
   font-size: 14px;
   cursor: pointer;
   padding: 0 4px;

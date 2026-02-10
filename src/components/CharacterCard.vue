@@ -208,7 +208,10 @@ function updateLabelStyle(style: LabelStyle) {
         {{ character.collapsed ? "▶" : "▼" }}
       </button>
 
-      <button @click="emit('selectCharacter', selected ? null : character.id)" title="Select">
+      <button
+        @click="emit('selectCharacter', selected ? null : character.id)"
+        title="Select"
+      >
         S
       </button>
 
@@ -240,7 +243,6 @@ function updateLabelStyle(style: LabelStyle) {
     <div class="card-body" v-show="!character.collapsed">
       <InitiativePanel :initiative="initiative" />
       <LightPanel :data="lightData" @update="updateLightData" />
-
       <Tracker
         v-for="tracker in owlTrackers"
         :key="tracker.id"
@@ -263,38 +265,42 @@ function updateLabelStyle(style: LabelStyle) {
 <style scoped>
 .player-card {
   width: 100%;
-  font-family: system-ui, sans-serif; /* background: #fff; */
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 16px;
+  background-color: var(--bg-paper);
+}
+
+.player-card > *{
   padding: 10px;
-  margin: 0;
 }
 
 .player-card.selected {
-  border: 1px solid #3b82f6;
+  border-color: var(--primary-main);
 }
 
 .player-card.selected .header {
-  border: 1px solid #3b82f6;
+  border-color: var(--primary-main);
 }
-
+.player-card.collapsed .header {
+  border-color: transparent;
+}
 /* Header layout */
 .header {
   display: flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin: 0;
-  padding: 0 10px 0 10px;
+  border-bottom: 1px solid;
+  border-color: var(--text-secondary);
+  padding-top: 0;
+  padding-bottom: 0;
 }
-.header input[type="color"] {
+/* .header input[type="color"] {
   flex: none;
   width: 22px;
   padding: 0;
   border: none;
   background: none;
-}
+} */
 
 /* Small icon buttons */
 .header button {

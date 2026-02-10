@@ -86,7 +86,12 @@ function setColor(index: number) {
 <template>
   <div class="tracker-row" :style="{ '--accent': color }">
     <!-- Name -->
-    <input class="name" v-model="tracker.name" placeholder="Tracker" />
+    <input
+      class="name"
+      type="text"
+      v-model="tracker.name"
+      placeholder="Tracker"
+    />
 
     <!-- Checkbox -->
     <input
@@ -143,12 +148,20 @@ function setColor(index: number) {
     </div>
 
     <!-- Move up -->
-    <button class="icon-btn" title="Move up" @click="$emit('move-up', tracker.id)">
+    <button
+      class="icon-btn"
+      title="Move up"
+      @click="$emit('move-up', tracker.id)"
+    >
       ⬆
     </button>
 
     <!-- Move down -->
-    <button class="icon-btn" title="Move down" @click="$emit('move-down', tracker.id)">
+    <button
+      class="icon-btn"
+      title="Move down"
+      @click="$emit('move-down', tracker.id)"
+    >
       ⬇
     </button>
 
@@ -194,27 +207,21 @@ function setColor(index: number) {
 .tracker-row {
   display: flex;
   align-items: center;
-  justify-content:flex-end;
+  justify-content: flex-end;
   font-size: 12px;
   font-weight: 600;
   gap: 4px;
   border-radius: 6px;
-  border: 1px solid #767676;
+  border: 1px solid var(--text-disabled);
   border-left: 4px solid var(--accent);
   margin-top: 0.5rem;
 }
 .name {
-  max-width: 30%;
-  height: 100%;
-  border: none;
-  background: none;
-  font-size: 13px;
+  margin-left: 1px;
+  flex: 1;
   margin-right: auto;
-}
-.name:focus {
-  outline: none;
-  background: #3c3c3c;
-  border-radius: 4px;
+  max-width: 30%;
+  min-width: 0;
 }
 
 input:focus {
@@ -227,6 +234,7 @@ input:focus {
   background: var(--accent);
   border: none;
   text-align: center;
+  color: var(--text-primary);
 }
 
 .counter {
@@ -241,6 +249,7 @@ input:focus {
   text-align: center;
 }
 .counter * {
+  color: var(--text-primary);
   background: none;
   outline: none;
   border: none;
@@ -314,6 +323,7 @@ input:focus {
   text-align: end;
 }
 .value-max * {
+  color: var(--text-primary);
   width: 30px;
   background: none;
   outline: none;
@@ -321,6 +331,9 @@ input:focus {
 }
 
 .icon-btn {
+  border: none;
+    color: var(--text-primary);
+
   width: 20px;
   padding: 0;
   margin: 0;

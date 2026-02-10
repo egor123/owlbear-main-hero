@@ -48,22 +48,31 @@ async function moveCamera() {
     isCameraAnimated = false;
   };
 
-  async function animate(now: number) {
-    const dt = Math.min(0.05, (now - lastTime) / 1000);
-
-    const [width, height, scale, position] = await Promise.all([
+  const [width, height, scale, position] = await Promise.all([
       OBR.viewport.getWidth(),
       OBR.viewport.getHeight(),
       OBR.viewport.getScale(),
       OBR.viewport.getPosition(),
     ]);
 
+  const offset = { x: width / 2, y: height / 2 };
+  let cameraPos = Math2.divide(Math2.subtract(position, offset), -scale);
+
+  async function animate(now: number) {
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+
+    const [width, height, scale] = await Promise.all([
+      OBR.viewport.getWidth(),
+      OBR.viewport.getHeight(),
+      OBR.viewport.getScale(),
+      // OBR.viewport.getPosition(),
+    ]);
     const offset = { x: width / 2, y: height / 2 };
-    const cameraPos = Math2.subtract(position, offset);
+    // cameraPos = Math2.subtract(position, offset);
 
     if (targetPos) {
-      const desiredPos = Math2.multiply(targetPos, -scale);
-      const toTarget = Math2.subtract(desiredPos, cameraPos);
+      // const desiredPos = Math2.multiply(targetPos, -scale);
+      const toTarget = Math2.subtract(targetPos, cameraPos);
 
       const accelFactor = isMoving
         ? accel
@@ -77,9 +86,9 @@ async function moveCamera() {
       const damp = Math.exp(-damping * dt);
       velocity = Math2.multiply(velocity, damp);
 
-      const nextPos = Math2.add(cameraPos, Math2.multiply(velocity, dt));
-
-      await OBR.viewport.setPosition(Math2.add(nextPos, offset));
+      cameraPos = Math2.add(cameraPos, Math2.multiply(velocity, dt));
+      const pos = Math2.add(Math2.multiply(cameraPos, -scale), offset);
+      await OBR.viewport.setPosition(pos);
     }
 
     if (isMoving) stopTime = now;
@@ -445,5 +454,11 @@ onUnmounted(() => {
     @move-up="store.moveCharacterUp"
     @move-down="store.moveCharacterDown"
   />
-  <button @click="store.addNewCharacter">New</button>
+  <button class="btn-new" @click="store.addNewCharacter">New</button>
 </template>
+
+<style scoped>
+.btn-new{
+  margin-top: 10px;
+}
+</style>

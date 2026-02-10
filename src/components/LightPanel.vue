@@ -14,7 +14,7 @@ function onGridChange(grid: Grid) {
 
 onMounted(() => {
   OBR.onReady(async () => {
-      unsubscribe.push(OBR.scene.grid.onChange(onGridChange));
+    unsubscribe.push(OBR.scene.grid.onChange(onGridChange));
   });
 });
 
@@ -51,8 +51,7 @@ const smooth = computed<boolean>(() => {
 });
 
 function swapType() {
-  if (type.value == "NORMAL")
-    update({ innerAngle: 45, outerAngle: 60 });
+  if (type.value == "NORMAL") update({ innerAngle: 45, outerAngle: 60 });
   else update({ innerAngle: 360, outerAngle: 360 });
 }
 
@@ -105,8 +104,8 @@ function toggleSmoothness() {
 
   padding: 4px 6px;
   border-radius: 6px;
-  border: 1px solid #555;
-  background: #2a2a2a;
+  border: 1px solid var(--text-disabled);
+  /* background: #2a2a2a; */
 }
 
 .type-btn {
@@ -116,8 +115,8 @@ function toggleSmoothness() {
   font-size: 11px;
   cursor: pointer;
 
-  background: #3a3a3a;
-  color: #bbb;
+  /* background: #3a3a3a;
+  color: #bbb; */
 }
 
 .range {
@@ -132,7 +131,7 @@ function toggleSmoothness() {
   border-radius: 4px;
   border: none;
   background: #444;
-  color: white;
+  color: var(--text-primary);
 }
 
 .range input:focus {
@@ -141,18 +140,19 @@ function toggleSmoothness() {
 }
 
 .smooth-btn {
-  border: none;
+  border: 1px solid;
+  border-color: transparent;
   border-radius: 4px;
   padding: 2px 6px;
   font-size: 11px;
   cursor: pointer;
 
   background: #3a3a3a;
-  color: #bbb;
+  color: var(--text-primary);
 }
 
 .smooth-btn.active {
-  background: #2563eb;
-  color: white;
+  border-color: var(--primary-light);
+  color: var(--primary-light);
 }
 </style>
