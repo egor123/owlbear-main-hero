@@ -128,7 +128,8 @@ async function movePlayer() {
       return;
     }
 
-    if (!interaction || now - iteractionStart > 30_000) { //FIXME
+    if (!interaction || now - iteractionStart > 30_000) {
+      //FIXME
       await stop();
       iteractionStart = performance.now();
       interaction = await OBR.interaction.startItemInteraction(player);
@@ -261,7 +262,13 @@ function handleKeyDown(event: KeyboardEvent) {
     const id = Object.keys(store.data.characters)[i];
     if (id) store.selectCharacter(id);
   }
-
+  if (key === "KeyR" && store.currentCharacterID && player) {
+    OBR.scene.items
+      .updateItems([player], (p) => {
+        if (p[0]) p[0].scale.x = -p[0].scale.x;
+      })
+      .catch(() => {});
+  }
   if (key === "KeyF" && store.currentCharacterID) {
     focus(store.currentCharacterID, false);
   }
