@@ -13,29 +13,31 @@ app.use(pinia);
 app.mount('#app');
 
 export function applyTheme(theme: Theme) {
-  const root = document.documentElement
+  const root = document.documentElement;
 
-  root.style.setProperty('--bg-default', theme.background.default)
-  root.style.setProperty('--bg-paper', theme.background.paper)
+  root.style.setProperty('--bg-default', theme.background.default);
+  root.style.setProperty('--bg-paper', theme.background.paper);
 
   // text
-  root.style.setProperty('--text-primary', theme.text.primary)
-  root.style.setProperty('--text-secondary', theme.text.secondary)
-  root.style.setProperty('--text-disabled', theme.text.disabled)
+  root.style.setProperty('--text-primary', theme.text.primary);
+  root.style.setProperty('--text-secondary', theme.text.secondary);
+  root.style.setProperty('--text-disabled', theme.text.disabled);
 
   // primary
-  root.style.setProperty('--primary-main', theme.primary.main)
-  root.style.setProperty('--primary-light', theme.primary.light)
-  root.style.setProperty('--primary-dark', theme.primary.dark)
-  root.style.setProperty('--primary-contrast', theme.primary.contrastText)
+  root.style.setProperty('--primary-main', theme.primary.main);
+  root.style.setProperty('--primary-light', theme.primary.light);
+  root.style.setProperty('--primary-dark', theme.primary.dark);
+  root.style.setProperty('--primary-contrast', theme.primary.contrastText);
 
   // secondary
-  root.style.setProperty('--secondary-main', theme.secondary.main)
-  root.style.setProperty('--secondary-light', theme.secondary.light)
-  root.style.setProperty('--secondary-dark', theme.secondary.dark)
-  root.style.setProperty('--secondary-contrast', theme.secondary.contrastText)
+  root.style.setProperty('--secondary-main', theme.secondary.main);
+  root.style.setProperty('--secondary-light', theme.secondary.light);
+  root.style.setProperty('--secondary-dark', theme.secondary.dark);
+  root.style.setProperty('--secondary-contrast', theme.secondary.contrastText);
+  
+  root.style.setProperty('--scheme', theme.mode.toLowerCase());
 
-  root.dataset.themeMode = theme.mode.toLowerCase()
+  root.dataset.themeMode = theme.mode.toLowerCase();
 }
 OBR.onReady(() => {
   OBR.theme.onChange(applyTheme);

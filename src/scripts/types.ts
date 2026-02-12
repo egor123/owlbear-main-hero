@@ -37,6 +37,16 @@ export interface LabelStyle {
     | "EB Garamond";
 }
 
+export const fonts = {
+  "Roboto": {label: "Rounded", css: "'Roboto', sans-serif"},
+  "Gotica": {label: "Fantasy", css: "Gotica, fantasy"},
+  "Permanent Marker": {label: "Marker", css: "'Permanent Marker', cursive"},
+  "Lemon Tuesday": {label: "Script", css: "'Lemon Tuesday', cursive"},
+  "Dancing Script": {label: "Cursive", css: "'Dancing Script', cursive"},
+  "Courier Prime": {label: "Mono", css: "'Courier Prime', monospace"},
+  "EB Garamond": {label: "Serif", css: "'EB Garamond', serif"},
+};
+
 export interface Dictionary<T> {
     [key: string]: T
 }

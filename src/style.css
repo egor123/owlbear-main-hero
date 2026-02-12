@@ -10,10 +10,17 @@
 
   scrollbar-color: var(--text-disabled) var(--bg-default);
   scrollbar-width: thin;
+  color-scheme: unset !important;
+}
+
+html {
+  scrollbar-gutter: stable both-edges;
+  background:transparent !important;
 }
 
 #app {
   text-align: center;
+  background: transparent !important;
 }
 
 .row {
@@ -89,6 +96,9 @@ button:hover {
   color: var(--primary-light);
 }
 
+input{
+  color-scheme: var(--scheme);
+}
 
 input[type="color"] {
   flex: none !important;
@@ -97,13 +107,10 @@ input[type="color"] {
   border-radius: 50% !important;
   inline-size: 30px !important;
   block-size: 30px !important;
-  /* border-style: 1px solid !important; */
   border-width: 1.5px !important;
   border-color: var(--text-disabled) !important;
-  /* border-color: yellow !important; */
   transition: border-color 0.25s;
   cursor: pointer;
-  /* scale: 0.6; */
   width: 18px !important;
   height: 18px !important;
 }
@@ -157,7 +164,6 @@ input[type="number"] {
 
   outline: none;
   text-align: center;
-  /* border: none; */
   background: none;
   color: var(--text-primary);
   border-radius: 16px;
@@ -166,7 +172,6 @@ input[type="number"] {
 }
 
 input[type="number"]:focus {
-  /* background: red; */
   border-color: var(--text-primary);
 }
 

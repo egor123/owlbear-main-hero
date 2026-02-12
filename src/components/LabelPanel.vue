@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LabelStyle } from "../scripts/types";
-
+import { fonts } from "../scripts/types";
 const props = defineProps<{
   labelStyle: LabelStyle;
 }>();
@@ -9,23 +9,6 @@ const emit = defineEmits<{
   (e: "update", value: LabelStyle): void;
 }>();
 
-const fontOptions = [
-  { value: "Roboto", label: "Rounded", css: "'Roboto', sans-serif" },
-  { value: "Gotica", label: "Fantasy", css: "Gotica, fantasy" },
-  {
-    value: "Permanent Marker",
-    label: "Marker",
-    css: "'Permanent Marker', cursive",
-  },
-  { value: "Lemon Tuesday", label: "Script", css: "'Lemon Tuesday', cursive" },
-  {
-    value: "Dancing Script",
-    label: "Cursive",
-    css: "'Dancing Script', cursive",
-  },
-  { value: "Courier Prime", label: "Mono", css: "'Courier Prime', monospace" },
-  { value: "EB Garamond", label: "Serif", css: "'EB Garamond', serif" },
-];
 </script>
 
 <template>
@@ -63,7 +46,8 @@ const fontOptions = [
     <!-- Font -->
     <select
       :value="labelStyle.font"
-      :style="{ fontFamily: labelStyle.font }"
+      :style="{ fontFamily: fonts[labelStyle.font]?.css }"
+      class="font-selector"
       @change="
         emit('update', {
           ...labelStyle,
@@ -73,12 +57,12 @@ const fontOptions = [
       "
     >
       <option
-        v-for="opt in fontOptions"
-        :key="opt.value"
-        :value="opt.value"
-        :style="{ fontFamily: opt.css }"
+        v-for="(data, key) in fonts"
+        :key="key"
+        :value="key"
+        :style="{ fontFamily: data.css }"
       >
-        {{ opt.label }}
+        {{ data.label }}
       </option>
     </select>
   </div>
@@ -102,4 +86,10 @@ const fontOptions = [
 .label-title {
   color: var(--text-disabled);
 }
+
+.font-selector{
+  width: 80px;
+  height: 22px;
+}
+
 </style>

@@ -2,13 +2,14 @@
 // import type { Ref, ComputedRef } from "vue";
 import { computed, onMounted, onUnmounted, watch } from "vue";
 import OBR from "@owlbear-rodeo/sdk";
-import type {
-  Character,
-  Token,
-  OwlTracker,
-  Dictionary,
-  Initiative,
-  LabelStyle,
+import {
+  type Character,
+  type Token,
+  type OwlTracker,
+  type Dictionary,
+  type Initiative,
+  type LabelStyle,
+  fonts,
 } from "../scripts/types.ts";
 import Tracker from "./Tracker.vue";
 import Tokens from "./Tokens.vue";
@@ -104,14 +105,16 @@ function updateItem(item: any, value: Character) {
 
 function update(value: Character) {
   if (!OBR.scene) return;
-  OBR.scene.items.updateItems(
-    (item) => item.id == props.character.id,
-    (items: any[]) => {
-      if (items && items.length > 0 && items[0]) {
-        updateItem(items[0], value);
-      }
-    },
-  ).catch(() => {});
+  OBR.scene.items
+    .updateItems(
+      (item) => item.id == props.character.id,
+      (items: any[]) => {
+        if (items && items.length > 0 && items[0]) {
+          updateItem(items[0], value);
+        }
+      },
+    )
+    .catch(() => {});
 }
 
 async function onChange(items: any[]) {
@@ -235,7 +238,12 @@ function updateLabelStyle(style: LabelStyle) {
       </button>
 
       <div class="name-wrapper">
-        <input v-model="character.name" type="text" placeholder="Enter name" />
+        <input
+          v-model="character.name"
+          type="text"
+          placeholder="Enter name"
+          :style="{ fontFamily: fonts[character.labelStyle.font]?.css, color: character.labelStyle.color, fontSize: (character.labelStyle.size*.8) + 'px'}"
+        />
 
         <div class="label-panel-popover">
           <LabelPanel
@@ -340,7 +348,8 @@ function updateLabelStyle(style: LabelStyle) {
 .name-wrapper {
   position: relative;
   display: flex;
-  min-width: 0; 
+  min-width: 0;
+  flex: .8;
 }
 
 /* Floating label settings panel */
@@ -362,9 +371,9 @@ function updateLabelStyle(style: LabelStyle) {
 .header input {
   width: 100%;
   min-width: 0;
-  font-size: 14px;
   font-weight: 600;
   border: 1.5px solid;
+  height: 22px;
   background: color-mix(in srgb, var(--secondary-contrast) 10%, transparent);
   border-color: color-mix(in srgb, var(--secondary-contrast) 20%, transparent);
 }
