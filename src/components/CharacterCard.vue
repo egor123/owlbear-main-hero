@@ -322,7 +322,7 @@ function updateLabelStyle(style: LabelStyle) {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  /* gap: 10px; */
 }
 
 .player-card.selected {
