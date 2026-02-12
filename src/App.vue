@@ -128,8 +128,7 @@ async function movePlayer() {
       return;
     }
 
-    if (!interaction || now - iteractionStart > 30_000) {
-      //FIXME
+    if (!interaction || now - iteractionStart > 10000) {
       await stop();
       iteractionStart = performance.now();
       interaction = await OBR.interaction.startItemInteraction(player);
