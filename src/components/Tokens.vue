@@ -78,15 +78,21 @@ function moveTokenDown(key: string) {
   <div class="tokens">
     <div class="tokens-header">
       <span>Tokens</span>
-      <button class="add-btn" @click="openImageSelector()">＋</button>
+      <button
+        class="icon-btn-primary"
+        title="Add tokens"
+        @click="openImageSelector()"
+      >
+        <i class="bi bi-plus-lg"></i>
+      </button>
     </div>
 
     <ul class="token-list">
       <li
         v-for="(token, key) in tokens"
         :key="key"
-        class="token-row"
-        :class="{ selected: key === selectedTokenId }"
+        class="row"
+        :class="{ active: key === selectedTokenId }"
         @click="selectToken(key)"
       >
         <img v-if="token" :src="token.image.url" class="token-img" />
@@ -101,29 +107,34 @@ function moveTokenDown(key: string) {
 
         <button
           class="icon-btn"
-          title="Change Label Type"
+          title="Change label type"
           @click="
             token.labelType = token.labelType == 'ADD' ? 'REPLACE' : 'ADD'
           "
         >
-          {{ token.labelType == "ADD" ? "A" : "R" }}
+          <i
+            :class="[
+              'bi',
+              token.labelType === 'ADD' ? 'bi-plus-circle' : 'bi-arrow-repeat',
+            ]"
+          ></i>
         </button>
         <!-- Move up -->
         <button class="icon-btn" title="Move up" @click="moveTokenUp(key)">
-          ⬆
+          <i class="bi bi-arrow-up"></i>
         </button>
 
         <!-- Move down -->
         <button class="icon-btn" title="Move down" @click="moveTokenDown(key)">
-          ⬇
+          <i class="bi bi-arrow-down"></i>
         </button>
 
         <button
-          class="remove-btn"
+          class="icon-btn"
           title="Remove token"
           @click.stop="removeToken(key)"
         >
-          ✕
+          <i class="bi bi-x-lg"></i>
         </button>
       </li>
 
@@ -134,9 +145,6 @@ function moveTokenDown(key: string) {
 
 <style scoped>
 /* Tokens */
-.tokens {
-  margin-top: 12px;
-}
 
 .tokens-header {
   display: flex;
@@ -146,20 +154,6 @@ function moveTokenDown(key: string) {
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 6px;
-}
-
-.add-btn {
-  /* border: none;
-  background: #e6f0ff;
-  color: #2563eb;
-  font-size: 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 2px 6px; */
-
-  padding: 3px 6px;
-  /* text-align: center;
-  justify-content: center; */
 }
 
 /* Token list */
@@ -172,24 +166,10 @@ function moveTokenDown(key: string) {
 }
 
 /* Token row */
-.token-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px;
+.row {
   border-radius: 16px;
   cursor: pointer;
-  border: 1px solid transparent;
-}
-
-/* .token-row:hover {
-  background: #f5f5f5;
-} */
-
-/* Selected state */
-.token-row.selected {
-  /* background: #eef4ff; */
-  border-color: var(--primary-light);
+  border-color: none;
 }
 
 /* Token image */
@@ -205,42 +185,9 @@ function moveTokenDown(key: string) {
   flex: 1;
 }
 
-/* Remove button */
-.remove-btn {
-  border: none;
-  background: transparent;
-  color: var(--text-disabled);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 4px;
-}
-
-.remove-btn:hover {
-  color: #dc2626;
-}
-
-.icon-btn {
-  background: transparent;
-  border: none;
-  border-radius: 5px;
-  /* background: transparent; */
-  color: #999;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 4px;
-  /* pointer-events: none; */
-  /* pointer-events: all; */
-}
-
-.icon-btn:hover {
-  color: #515151;
-}
-
 /* Empty state */
 .empty {
   font-size: 12px;
-  color: #888;
-  padding: 6px;
-  text-align: center;
+  color: var(--text-disabled);
 }
 </style>

@@ -67,6 +67,18 @@ let lastChange: Date | null = null;
 let unsubscribe: any[] = [];
 
 function updateItem(item: any, value: Character) {
+  if (props.selected) {
+    OBR.player.getRole().then((role) => {
+      if (role === "PLAYER") {
+        OBR.player.getName().then((name) => {
+          if (name !== value.name) OBR.player.setName(value.name);
+        });
+        OBR.player.getColor().then((color) => {
+          if (color !== value.color) OBR.player.setColor(value.color);
+        });
+      }
+    });
+  }
   const val: Character = JSON.parse(JSON.stringify(value));
   const token = val.tokens[val.selectedTokenId ?? ""];
   const metadata = JSON.parse(JSON.stringify(value.metadata));
@@ -82,6 +94,7 @@ function updateItem(item: any, value: Character) {
   item.scale = { x: value.scale.x, y: value.scale.y };
   item.metadata = metadata;
   item.text.plainText = value.name;
+
   if (token) {
     if (token.labelType === "ADD" && token?.label)
       item.text.plainText += ` (${token.label})`;
@@ -89,16 +102,16 @@ function updateItem(item: any, value: Character) {
   }
 }
 
-async function update(value: Character) {
+function update(value: Character) {
   if (!OBR.scene) return;
-  await OBR.scene.items.updateItems(
+  OBR.scene.items.updateItems(
     (item) => item.id == props.character.id,
     (items: any[]) => {
       if (items && items.length > 0 && items[0]) {
         updateItem(items[0], value);
       }
     },
-  );
+  ).catch(() => {});
 }
 
 async function onChange(items: any[]) {
@@ -202,17 +215,23 @@ function updateLabelStyle(style: LabelStyle) {
     <!-- Header -->
     <div class="header">
       <button
-        class="fold-btn"
+        class="icon-btn"
         @click="character.collapsed = !character.collapsed"
+        :aria-label="character.collapsed ? 'Expand' : 'Collapse'"
       >
-        {{ character.collapsed ? "▶" : "▼" }}
+        <i
+          :class="[
+            'bi',
+            character.collapsed ? 'bi-caret-right-fill' : 'bi-caret-down-fill',
+          ]"
+        ></i>
       </button>
-
       <button
         @click="emit('selectCharacter', selected ? null : character.id)"
-        title="Select"
+        class="icon-btn"
+        :title="selected ? 'Deselect' : 'Select'"
       >
-        S
+        <i :class="['bi', selected ? 'bi-check-circle-fill' : 'bi-circle']"></i>
       </button>
 
       <div class="name-wrapper">
@@ -231,17 +250,39 @@ function updateLabelStyle(style: LabelStyle) {
         :value="character.color"
         @change="character.color = ($event.target as HTMLInputElement).value"
       />
-      <button @click="focus(character.id)" title="Focus">F</button>
-      <button @click="emit('moveUp', character.id)" title="Move Up">⬆</button>
-      <button @click="emit('moveDown', character.id)" title="Move Down">
-        ⬇
+      <button class="icon-btn" @click="focus(character.id)" title="Focus">
+        <i class="bi bi-geo-fill"></i>
       </button>
-      <button @click="showDeleteCharacterConfirm" title="Delete">✕</button>
+      <button
+        class="icon-btn"
+        @click="emit('moveUp', character.id)"
+        title="Move Up"
+      >
+        <i class="bi bi-arrow-up"></i>
+      </button>
+      <button
+        class="icon-btn"
+        @click="emit('moveDown', character.id)"
+        title="Move Down"
+      >
+        <i class="bi bi-arrow-down"></i>
+      </button>
+      <button
+        class="icon-btn"
+        @click="showDeleteCharacterConfirm"
+        title="Delete"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
 
     <!-- Foldable body -->
     <div class="card-body" v-show="!character.collapsed">
-      <InitiativePanel :initiative="initiative" />
+      <InitiativePanel
+        :initiative="initiative"
+        :name="character.name"
+        @select="emit('selectCharacter', character.id)"
+      />
       <LightPanel :data="lightData" @update="updateLightData" />
       <Tracker
         v-for="tracker in owlTrackers"
@@ -269,9 +310,11 @@ function updateLabelStyle(style: LabelStyle) {
   border-radius: 16px;
   background-color: var(--bg-paper);
 }
-
-.player-card > *{
+.card-body {
   padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .player-card.selected {
@@ -288,52 +331,26 @@ function updateLabelStyle(style: LabelStyle) {
 .header {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
   border-bottom: 1px solid;
   border-color: var(--text-secondary);
-  padding-top: 0;
-  padding-bottom: 0;
-}
-/* .header input[type="color"] {
-  flex: none;
-  width: 22px;
-  padding: 0;
-  border: none;
-  background: none;
-} */
-
-/* Small icon buttons */
-.header button {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-
-  background: #2a2a2a;
-  color: #ddd;
-}
-
-.header button:hover {
-  background: #3a3a3a;
+  padding: 0 10px;
 }
 
 .name-wrapper {
   position: relative;
-  flex: 1;
+  display: flex;
+  min-width: 0; 
 }
 
 /* Floating label settings panel */
 .label-panel-popover {
   display: none;
   position: absolute;
-  top: calc(100%);
-  left: 0;
+  top: 0;
+  left: 50%;
   z-index: 20;
-
+  transform: translateX(-50%) translateY(50%);
   width: fit-content;
 }
 
@@ -341,42 +358,20 @@ function updateLabelStyle(style: LabelStyle) {
   display: block;
 }
 
-/* Fold button slightly larger / clearer */
-.fold-btn {
-  font-size: 13px;
-}
-
 /* Name input = main visual focus */
 .header input {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  /* max-width: fit-content; */
-  /* width:auto; */
-  height: 26px;
-  padding: 4px 6px;
-
   font-size: 14px;
   font-weight: 600;
-
-  border-radius: 6px;
-  border: 1px solid #555;
-  background: #1f1f1f;
-  color: white;
+  border: 1.5px solid;
+  background: color-mix(in srgb, var(--secondary-contrast) 10%, transparent);
+  border-color: color-mix(in srgb, var(--secondary-contrast) 20%, transparent);
 }
 
 /* Focus state */
 .header input:focus {
   outline: none;
-  border-color: #3b82f6;
-  background: #242424;
-}
-
-/* Selected card accent */
-.player-card.selected .header input {
-  border-color: #3b82f6;
-}
-
-.card-body {
-  margin-top: 10px;
+  border-color: var(--primary-light);
 }
 </style>

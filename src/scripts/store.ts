@@ -66,10 +66,6 @@ export const usePlayerStore = defineStore("player", () => {
         }
     }
 
-    function upsertCharacter(character: Character) {
-        data.value.characters[character.id] = character;
-    }
-
     function removeCharacter(id: string) {
         delete data.value.characters[id];
         if (data.value.selectedCharacterId === id) {
@@ -122,7 +118,6 @@ export const usePlayerStore = defineStore("player", () => {
         // actions
         addNewCharacter,
         selectCharacter,
-        upsertCharacter,
         removeCharacter,
         moveCharacterUp,
         moveCharacterDown,

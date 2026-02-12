@@ -1,57 +1,49 @@
 <script setup lang="ts">
+import { onMounted, watch } from "vue";
 import type { Initiative } from "../scripts/types";
+import OBR from "@owlbear-rodeo/sdk";
 
-defineProps<{
+const props = defineProps<{
   initiative: Initiative | null;
+  name: string;
 }>();
+
+function rainseTurnMsg() {
+  OBR.notification.show(`${props.name}'s turn!`);
+  emit("select");
+}
+
+
+const emit = defineEmits<{
+  (e: "select"): void;
+}>();
+
+watch(
+  () => props.initiative,
+  (newValue, oldValue) => {
+    if (newValue?.active && (!oldValue || !oldValue.active)) rainseTurnMsg();
+  },
+);
+onMounted(() => {
+  OBR.onReady(() => {
+    if (props.initiative?.active) rainseTurnMsg();
+    OBR.scene.onReadyChange((val) => {
+      if (val && props.initiative?.active) rainseTurnMsg();
+    });
+  });
+});
 </script>
 <template>
-  <div v-if="initiative" class="initiative" :class="{ active: initiative.active }">
-    <span class="label">INIT</span>
+  <div v-if="initiative" class="row" :class="{ active: initiative.active }">
+    <span class="label">Initiative</span>
     <span class="value">{{ initiative.count }}</span>
 
-    <span v-if="initiative.active" class="turn-indicator">
-      Your turn
-    </span>
+    <span v-if="initiative.active" class="turn-indicator"> Your turn </span>
   </div>
 </template>
 <style scoped>
-.initiative {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  padding: 4px 8px;
-  border-radius: 6px;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  background: #2a2a2a;
-  color: #bbb;
-  border: 1px solid #444;
-}
-
-.label {
-  font-size: 10px;
-  opacity: 0.7;
-}
-
-.value {
-  font-size: 14px;
-  color: white;
-}
-
-/* Active turn */
-.initiative.active {
-  background: #2563eb;
-  border-color: #3b82f6;
-  color: white;
-}
-
 .turn-indicator {
-  font-size: 10px;
-  padding-left: 4px;
-  opacity: 0.9;
+  margin-left: auto;
+  color: var(--primary-light);
 }
 </style>

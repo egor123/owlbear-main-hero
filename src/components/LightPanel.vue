@@ -51,7 +51,7 @@ const smooth = computed<boolean>(() => {
 });
 
 function swapType() {
-  if (type.value == "NORMAL") update({ innerAngle: 45, outerAngle: 60 });
+  if (type.value == "NORMAL") update({ innerAngle: 70, outerAngle: 90 });
   else update({ innerAngle: 360, outerAngle: 360 });
 }
 
@@ -66,9 +66,14 @@ function toggleSmoothness() {
 </script>
 
 <template>
-  <div v-if="data" class="light-row">
-    <button class="type-btn" @click="swapType">
-      {{ type === "FLASHLIGHT" ? "🔦" : "💡" }}
+  <div v-if="data" class="row">
+    <button class="icon-btn" title="Change light type" @click="swapType">
+      <i
+        :class="[
+          'bi',
+          type === 'FLASHLIGHT' ? 'bi-lamp-fill' : 'bi-lightbulb-fill',
+        ]"
+      ></i>
     </button>
 
     <label class="range">
@@ -83,7 +88,7 @@ function toggleSmoothness() {
     </label>
 
     <button
-      class="smooth-btn"
+      class="toggle-btn"
       :class="{ active: smooth }"
       title="Toggle smooth edge"
       @click="toggleSmoothness"
@@ -94,65 +99,18 @@ function toggleSmoothness() {
 </template>
 
 <style scoped>
-.light-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid var(--text-disabled);
-  /* background: #2a2a2a; */
-}
-
-.type-btn {
-  border: none;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 11px;
-  cursor: pointer;
-
-  /* background: #3a3a3a;
-  color: #bbb; */
-}
 
 .range {
   display: flex;
   align-items: center;
+  color: var(--text-disabled);
   gap: 4px;
 }
-
-.range input {
-  width: 48px;
-  text-align: center;
-  border-radius: 4px;
-  border: none;
-  background: #444;
-  color: var(--text-primary);
+input{
+  width: 50px;
+}
+.toggle-btn{
+  margin-left: auto;
 }
 
-.range input:focus {
-  outline: none;
-  background: #555;
-}
-
-.smooth-btn {
-  border: 1px solid;
-  border-color: transparent;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 11px;
-  cursor: pointer;
-
-  background: #3a3a3a;
-  color: var(--text-primary);
-}
-
-.smooth-btn.active {
-  border-color: var(--primary-light);
-  color: var(--primary-light);
-}
 </style>

@@ -4,6 +4,7 @@ import App from './App.vue';
 // import OBR from '@owlbear-rodeo/sdk';
 import { createPinia } from 'pinia'
 import OBR, { type Theme } from "@owlbear-rodeo/sdk";
+import 'bootstrap-icons/font/bootstrap-icons.css'
 
 const pinia = createPinia();
 const app = createApp(App);

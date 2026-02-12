@@ -27,7 +27,6 @@ let targetPos: Vector2 | null = null;
 
 // ---- Subscriptions ----
 const unsubscribe: any[] = [];
-// let interaction;
 
 // ---- Movement ----
 
@@ -49,11 +48,11 @@ async function moveCamera() {
   };
 
   const [width, height, scale, position] = await Promise.all([
-      OBR.viewport.getWidth(),
-      OBR.viewport.getHeight(),
-      OBR.viewport.getScale(),
-      OBR.viewport.getPosition(),
-    ]);
+    OBR.viewport.getWidth(),
+    OBR.viewport.getHeight(),
+    OBR.viewport.getScale(),
+    OBR.viewport.getPosition(),
+  ]);
 
   const offset = { x: width / 2, y: height / 2 };
   let cameraPos = Math2.divide(Math2.subtract(position, offset), -scale);
@@ -65,13 +64,10 @@ async function moveCamera() {
       OBR.viewport.getWidth(),
       OBR.viewport.getHeight(),
       OBR.viewport.getScale(),
-      // OBR.viewport.getPosition(),
     ]);
     const offset = { x: width / 2, y: height / 2 };
-    // cameraPos = Math2.subtract(position, offset);
 
     if (targetPos) {
-      // const desiredPos = Math2.multiply(targetPos, -scale);
       const toTarget = Math2.subtract(targetPos, cameraPos);
 
       const accelFactor = isMoving
@@ -115,8 +111,9 @@ async function movePlayer() {
   targetPos = null;
   await new Promise((resolve) => setTimeout(resolve, PREANIMATION_DELAY));
 
-  let interaction = await OBR.interaction.startItemInteraction(player);
-  const [update, stop] = interaction;
+  let iteractionStart = performance.now();
+  let interaction: any = await OBR.interaction.startItemInteraction(player);
+  let [update, stop] = interaction;
 
   async function animate(now: number) {
     const t = Math.min((now - startTime) / ANIMATION_DURATION, 1);
@@ -129,6 +126,13 @@ async function movePlayer() {
       stop();
       isMoving = false;
       return;
+    }
+
+    if (!interaction || now - iteractionStart > 30_000) { //FIXME
+      await stop();
+      iteractionStart = performance.now();
+      interaction = await OBR.interaction.startItemInteraction(player);
+      [update, stop] = interaction;
     }
 
     if (startPos == null) {
@@ -176,7 +180,7 @@ async function movePlayer() {
       };
 
       moveCamera();
-      update((item) => {
+      update((item: Item) => {
         item.position = currentPos;
       });
     } else {
@@ -211,17 +215,19 @@ async function setPlayerRotation(player: Item, angle: number) {
   player.metadata["rodeo.owlbear.dynamic-fog/light"] = data;
 }
 
-async function rotatePlayer(dir: number) {
+function rotatePlayer(dir: number) {
   if (!player || isMoving) return;
   const id = player.id;
-  await OBR.scene.items.updateItems([id], (player) => {
-    if (!player[0]) return;
-    let data: any = player[0].metadata["rodeo.owlbear.dynamic-fog/light"];
-    if (!data) return;
-    data.rotation += dir * (360 / 8);
-    data.rotation = (360 + data.rotation) % 360;
-    player[0].metadata["rodeo.owlbear.dynamic-fog/light"] = data;
-  });
+  OBR.scene.items
+    .updateItems([id], (player) => {
+      if (!player[0]) return;
+      let data: any = player[0].metadata["rodeo.owlbear.dynamic-fog/light"];
+      if (!data) return;
+      data.rotation += dir * (360 / 8);
+      data.rotation = (360 + data.rotation) % 360;
+      player[0].metadata["rodeo.owlbear.dynamic-fog/light"] = data;
+    })
+    .catch(() => {});
 }
 
 // ---- Keyboard ----
@@ -231,16 +237,16 @@ function getMoveDir() {
   let dx = 0;
   let dy = 0;
 
-  if (pressedKeys.has("w") || pressedKeys.has("arrowup")) dy -= 1;
-  if (pressedKeys.has("s") || pressedKeys.has("arrowdown")) dy += 1;
-  if (pressedKeys.has("a") || pressedKeys.has("arrowleft")) dx -= 1;
-  if (pressedKeys.has("d") || pressedKeys.has("arrowright")) dx += 1;
+  if (pressedKeys.has("KeyW") || pressedKeys.has("ArrowUp")) dy -= 1;
+  if (pressedKeys.has("KeyS") || pressedKeys.has("ArrowDown")) dy += 1;
+  if (pressedKeys.has("KeyA") || pressedKeys.has("ArrowLeft")) dx -= 1;
+  if (pressedKeys.has("KeyD") || pressedKeys.has("ArrowRight")) dx += 1;
 
   return { x: dx, y: dy };
 }
 
 function handleKeyUp(event: KeyboardEvent) {
-  pressedKeys.delete(event.key.toLowerCase());
+  pressedKeys.delete(event.code);
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -248,26 +254,33 @@ function handleKeyDown(event: KeyboardEvent) {
     pressedKeys.clear();
     return;
   }
-  const key = event.key.toLowerCase();
-  if (key.includes("f") && store.currentCharacterID) {
+  const key = event.code;
+
+  if (key.startsWith("Digit")) {
+    const i = parseInt(key.substring(5)) - 1;
+    const id = Object.keys(store.data.characters)[i];
+    if (id) store.selectCharacter(id);
+  }
+
+  if (key === "KeyF" && store.currentCharacterID) {
     focus(store.currentCharacterID, false);
   }
-  if (key.includes("q")) {
+  if (key === "KeyQ") {
     rotatePlayer(-1);
   }
-  if (key.includes("e")) {
+  if (key === "KeyE") {
     rotatePlayer(1);
   }
   if (
     ![
-      "w",
-      "a",
-      "s",
-      "d",
-      "arrowup",
-      "arrowdown",
-      "arrowleft",
-      "arrowright",
+      "KeyW",
+      "KeyA",
+      "KeyS",
+      "KeyD",
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
     ].includes(key)
   ) {
     return;
@@ -328,15 +341,9 @@ async function spawnCharacter(pos: Vector2) {
   const char = store.currentCharacter;
   if (!char || !char.selectedTokenId) return;
 
-  const token = (await OBR.scene.items.getItems([char.id]))[0];
-  if (token) {
-    await OBR.scene.items.updateItems([char.id], (items) => {
-      if (items[0]) {
-        items[0].position = pos;
-        items[0].visible = true;
-      }
-    });
-    return;
+  const token = await OBR.scene.items.getItems([char.id]);
+  if (token.length) {
+    await OBR.scene.items.deleteItems(token.map((t) => t.id));
   }
   let img = char.tokens[char.selectedTokenId];
   img = JSON.parse(JSON.stringify(img));
@@ -458,7 +465,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.btn-new{
+.btn-new {
   margin-top: 10px;
 }
 </style>

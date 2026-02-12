@@ -84,7 +84,7 @@ function setColor(index: number) {
 </script>
 
 <template>
-  <div class="tracker-row" :style="{ '--accent': color }">
+  <div class="row" :style="{ '--accent': color }">
     <!-- Name -->
     <input
       class="name"
@@ -97,7 +97,11 @@ function setColor(index: number) {
     <input
       v-if="tracker.variant === 'checkbox'"
       type="checkbox"
-      class="checkbox"
+      :class="[
+        'checkbox',
+        'bi',
+        (tracker.checked ?? true) ? 'bi-check-circle' : 'bi-circle',
+      ]"
       :checked="tracker.checked ?? true"
       @change="updateChecked(($event.target as HTMLInputElement).checked)"
     />
@@ -112,13 +116,12 @@ function setColor(index: number) {
 
     <!-- Counter -->
     <div v-else-if="tracker.variant === 'counter'" class="counter">
-      <button @click="inc(-1)">-</button>
+      <button @click="inc(-1)"><i class="bi bi-dash"></i></button>
       <input
-        type="number"
         :value="tracker.value ?? 0"
         @input="updateValue(($event.target as HTMLInputElement).value)"
       />
-      <button @click="inc(1)">+</button>
+      <button @click="inc(1)"><i class="bi bi-plus"></i></button>
     </div>
 
     <!-- Value / Max -->
@@ -153,7 +156,7 @@ function setColor(index: number) {
       title="Move up"
       @click="$emit('move-up', tracker.id)"
     >
-      ⬆
+      <i class="bi bi-arrow-up"></i>
     </button>
 
     <!-- Move down -->
@@ -162,7 +165,7 @@ function setColor(index: number) {
       title="Move down"
       @click="$emit('move-down', tracker.id)"
     >
-      ⬇
+      <i class="bi bi-arrow-down"></i>
     </button>
 
     <!-- Show / Hide on map -->
@@ -176,7 +179,12 @@ function setColor(index: number) {
         })
       "
     >
-      {{ (tracker.showOnMap ?? true) ? "👁️" : "🚫" }}
+      <i
+        :class="[
+          'bi',
+          (tracker.showOnMap ?? true) ? 'bi-eye-fill' : 'bi-eye-slash-fill',
+        ]"
+      ></i>
     </button>
 
     <!-- Color picker -->
@@ -187,10 +195,10 @@ function setColor(index: number) {
         @click="showColorPicker = !showColorPicker"
         :style="{ background: color }"
       >
-        🎨
+        <i class="bi bi-palette-fill"></i>
       </button>
-
-      <div v-if="showColorPicker" class="color-popup">
+      <!-- v-if="showColorPicker"  -->
+      <div class="color-popup">
         <button
           v-for="(c, i) in palette"
           :key="i"
@@ -204,17 +212,10 @@ function setColor(index: number) {
 </template>
 
 <style scoped>
-.tracker-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  font-size: 12px;
-  font-weight: 600;
-  gap: 4px;
-  border-radius: 6px;
+.row {
   border: 1px solid var(--text-disabled);
   border-left: 4px solid var(--accent);
-  margin-top: 0.5rem;
+  padding: 0;
 }
 .name {
   margin-left: 1px;
@@ -260,9 +261,7 @@ input:focus {
 .counter input {
   max-width: 40px;
 }
-.counter button {
-  padding: 0 5px 0 5px;
-}
+
 .counter button:hover {
   background: #0000001a;
 }
@@ -276,6 +275,7 @@ input:focus {
   margin: 0;
   padding: 0;
 
+  color: var(--text-secondary);
   background: var(--accent);
   border-radius: 5px;
 
@@ -284,24 +284,9 @@ input:focus {
 
   cursor: pointer;
 }
-
 .checkbox:hover {
   background: color-mix(in srgb, var(--accent) 85%, black);
-}
-.checkbox::after {
-  content: "";
-  width: 0.3em;
-  height: 0.6em;
-
-  border-right: 2px solid white;
-  border-bottom: 2px solid white;
-
-  transform: rotate(45deg) scale(0);
-  /* transition: transform 0.1s ease-in-out; */
-}
-
-.checkbox:checked::after {
-  transform: rotate(45deg) scale(1);
+  justify-items: center;
 }
 
 .value-max {
@@ -330,36 +315,33 @@ input:focus {
   border: none;
 }
 
-.icon-btn {
-  border: none;
-    color: var(--text-primary);
-
-  width: 20px;
-  padding: 0;
-  margin: 0;
-  border-radius: 5px;
-  text-align: center;
+.color-wrapper{
+  position: relative;
 }
-
 .color-btn {
   width: 30px;
   padding: 0;
   margin: 0;
   border-radius: 5px;
-  text-align: center;
 }
 .color-popup {
-  /* position: absolute; */
-  right: 0;
-  top: 26px;
-  display: grid;
+  display: none;
+
+  position: absolute;
+
+  left: 100%;
+  transform: translateX(-100%);
+
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   padding: 6px;
-  background: #1e1e1e;
+  background: var(--bg-default);
   border-radius: 6px;
-  border: 1px solid #555;
+  border: 1px solid var(--primary-dark);
   z-index: 10;
+}
+.color-wrapper:focus-within .color-popup {
+  display: grid;
 }
 
 .color-swatch {
@@ -368,15 +350,5 @@ input:focus {
   border-radius: 4px;
   border: none;
   cursor: pointer;
-}
-
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type="number"] {
-  appearance: none;
-  -moz-appearance: textfield;
 }
 </style>

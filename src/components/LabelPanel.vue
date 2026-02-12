@@ -8,6 +8,24 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "update", value: LabelStyle): void;
 }>();
+
+const fontOptions = [
+  { value: "Roboto", label: "Rounded", css: "'Roboto', sans-serif" },
+  { value: "Gotica", label: "Fantasy", css: "Gotica, fantasy" },
+  {
+    value: "Permanent Marker",
+    label: "Marker",
+    css: "'Permanent Marker', cursive",
+  },
+  { value: "Lemon Tuesday", label: "Script", css: "'Lemon Tuesday', cursive" },
+  {
+    value: "Dancing Script",
+    label: "Cursive",
+    css: "'Dancing Script', cursive",
+  },
+  { value: "Courier Prime", label: "Mono", css: "'Courier Prime', monospace" },
+  { value: "EB Garamond", label: "Serif", css: "'EB Garamond', serif" },
+];
 </script>
 
 <template>
@@ -45,7 +63,7 @@ const emit = defineEmits<{
     <!-- Font -->
     <select
       :value="labelStyle.font"
-      title="Label font"
+      :style="{ fontFamily: labelStyle.font }"
       @change="
         emit('update', {
           ...labelStyle,
@@ -54,13 +72,14 @@ const emit = defineEmits<{
         })
       "
     >
-      <option value="Roboto">Rounded</option>
-      <option value="Gotica">Fantasy</option>
-      <option value="Permanent Marker">Marker</option>
-      <option value="Lemon Tuesday">Script</option>
-      <option value="Dancing Script">Cursive</option>
-      <option value="Courier Prime">Mono</option>
-      <option value="EB Garamond">Serif</option>
+      <option
+        v-for="opt in fontOptions"
+        :key="opt.value"
+        :value="opt.value"
+        :style="{ fontFamily: opt.css }"
+      >
+        {{ opt.label }}
+      </option>
     </select>
   </div>
 </template>
@@ -75,37 +94,12 @@ const emit = defineEmits<{
   padding: 4px 6px;
 
   border-radius: 6px;
-  border: 1px solid #444;
-  background: #1f1f1f;
+  border: 1px solid var(--primary-dark);
+  background: var(--bg-paper);
 
   font-size: 11px;
 }
-
 .label-title {
-  opacity: 0.7;
-  margin-right: 4px;
-}
-
-.label-settings input[type="number"] {
-  width: 44px;
-  height: 22px;
-  text-align: center;
-}
-
-.label-settings input[type="color"] {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  background: none;
-}
-
-.label-settings select {
-  height: 22px;
-  font-size: 11px;
-  background: #2a2a2a;
-  color: #ddd;
-  border: 1px solid #555;
-  border-radius: 4px;
+  color: var(--text-disabled);
 }
 </style>
