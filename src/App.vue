@@ -15,16 +15,24 @@ import { focus } from "./scripts/playerUtils";
 
 const store = usePlayerStore();
 
-const ANIMATION_DURATION = 300;
-const PREANIMATION_DELAY = 20;
+// ---- config ----
+const MOVE_DURATION = 300;
+const PRE_MOVE_DELAY = 20;
 
+const CAMERA_LOOKAHEAD_DISTANCE = 7;
+const CAMERA_ACCEL = 15;
+const CAMERA_DAMPING = 10;
+const CAMERA_STOP_TIME = 500;
+
+const INTERACTION_REFRESH_TIME = 10000;
+const ACTION_COOLDOWN = 200;
 // ---- state ----
 let player: Item | null = null;
 let isMoving = false;
 let isCameraAnimated = false;
 let gridDpi = 150;
 let targetPos: Vector2 | null = null;
-
+let dir: Vector2 = { x: 0, y: 0 };
 // ---- Subscriptions ----
 const unsubscribe: any[] = [];
 
@@ -33,10 +41,6 @@ const unsubscribe: any[] = [];
 async function moveCamera() {
   if (!player || isCameraAnimated) return;
   isCameraAnimated = true;
-
-  const accel = 15;
-  const damping = 10;
-  const fadeOutTime = 500;
 
   let lastTime = performance.now();
   let stopTime = lastTime;
@@ -68,18 +72,25 @@ async function moveCamera() {
     const offset = { x: width / 2, y: height / 2 };
 
     if (targetPos) {
-      const toTarget = Math2.subtract(targetPos, cameraPos);
+      const target = Math2.add(
+        targetPos,
+        Math2.multiply(
+          Math2.normalize(getMoveDir()),
+          (gridDpi * CAMERA_LOOKAHEAD_DISTANCE) / (isTurnBasedMove() ? 1 : 2),
+        ),
+      );
+      const toTarget = Math2.subtract(target, cameraPos);
 
       const accelFactor = isMoving
-        ? accel
-        : Math.max(0, 1 - (now - stopTime) / fadeOutTime) * accel;
+        ? CAMERA_ACCEL
+        : Math.max(0, 1 - (now - stopTime) / CAMERA_STOP_TIME) * CAMERA_ACCEL;
 
       velocity = Math2.add(
         velocity,
         Math2.multiply(toTarget, accelFactor * dt),
       );
 
-      const damp = Math.exp(-damping * dt);
+      const damp = Math.exp(-CAMERA_DAMPING * dt);
       velocity = Math2.multiply(velocity, damp);
 
       cameraPos = Math2.add(cameraPos, Math2.multiply(velocity, dt));
@@ -88,7 +99,7 @@ async function moveCamera() {
     }
 
     if (isMoving) stopTime = now;
-    else if (now >= stopTime + fadeOutTime) {
+    else if (now >= stopTime + CAMERA_STOP_TIME) {
       stop();
       return;
     }
@@ -98,9 +109,14 @@ async function moveCamera() {
   requestAnimationFrame(animate);
 }
 
+function isTurnBasedMove() {
+  const data: any = player?.metadata["rodeo.owlbear.dynamic-fog/light"];
+  if (!data || !data.innerAngle) return false;
+  return data.innerAngle !== 360;
+}
+
 async function movePlayer() {
   if (!player || isMoving) return;
-
   const currentPlayerId = player.id;
   isMoving = true;
 
@@ -109,14 +125,14 @@ async function movePlayer() {
   let startPos: Vector2 | null = null;
   let targetAngle = 0;
   targetPos = null;
-  await new Promise((resolve) => setTimeout(resolve, PREANIMATION_DELAY));
+  await new Promise((resolve) => setTimeout(resolve, PRE_MOVE_DELAY));
 
   let iteractionStart = performance.now();
   let interaction: any = await OBR.interaction.startItemInteraction(player);
   let [update, stop] = interaction;
 
   async function animate(now: number) {
-    const t = Math.min((now - startTime) / ANIMATION_DURATION, 1);
+    const t = Math.min((now - startTime) / MOVE_DURATION, 1);
     // const eased = 1 - Math.pow(1 - t, 3); // TODO try different funcs + durations
     const eased = t;
     let skip = false;
@@ -128,7 +144,7 @@ async function movePlayer() {
       return;
     }
 
-    if (!interaction || now - iteractionStart > 10000) {
+    if (!interaction || now - iteractionStart > INTERACTION_REFRESH_TIME) {
       await stop();
       iteractionStart = performance.now();
       interaction = await OBR.interaction.startItemInteraction(player);
@@ -138,16 +154,18 @@ async function movePlayer() {
     if (startPos == null) {
       const p = await OBR.scene.items.getItems([currentPlayerId]);
       if (p[0] == null) {
-        stop();
+        await stop();
         isMoving = false;
         return;
       }
       startPos = p[0].position;
     }
     if (targetPos == null) {
-      const dir = getMoveDir();
-      const rad = Math.atan2(dir.x, -dir.y);
-      targetAngle = rad * (180 / Math.PI);
+      dir = getMoveDir();
+      if (dir.x !== 0 || dir.y != 0) {
+        const rad = Math.atan2(dir.x, -dir.y);
+        targetAngle = rad * (180 / Math.PI);
+      }
       targetPos = {
         x: Math.round(dir.x + (startPos.x - o) / gridDpi) * gridDpi + o,
         y: Math.round(dir.y + (startPos.y - o) / gridDpi) * gridDpi + o,
@@ -184,7 +202,7 @@ async function movePlayer() {
         item.position = currentPos;
       });
     } else {
-      await new Promise((resolve) => setTimeout(resolve, ANIMATION_DURATION));
+      await new Promise((resolve) => setTimeout(resolve, MOVE_DURATION));
     }
     if (!skip && t < 1) {
       requestAnimationFrame(animate);
@@ -192,10 +210,15 @@ async function movePlayer() {
       const dir = getMoveDir();
       if (dir.x == 0 && dir.y == 0) {
         //finished
-        stop();
+        await stop();
         isMoving = false;
+      } else if (isTurnBasedMove()) {
+        await stop();
+        isMoving = false;
+        movePlayer();
       } else {
         // clear state + continue
+
         startTime = performance.now();
         startPos = { x: targetPos.x, y: targetPos.y };
         targetPos = null;
@@ -249,6 +272,18 @@ function handleKeyUp(event: KeyboardEvent) {
   pressedKeys.delete(event.code);
 }
 
+const actionCooldowns = new Map<string, number>();
+
+function canRun(action: string, cooldownMs: number = ACTION_COOLDOWN) {
+  const now = performance.now();
+  const last = actionCooldowns.get(action) ?? 0;
+
+  if (now - last < cooldownMs) return false;
+
+  actionCooldowns.set(action, now);
+  return true;
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   if (document.activeElement instanceof HTMLInputElement) {
     pressedKeys.clear();
@@ -256,25 +291,25 @@ function handleKeyDown(event: KeyboardEvent) {
   }
   const key = event.code;
 
-  if (key.startsWith("Digit")) {
+  if (key.startsWith("Digit") && canRun(key)) {
     const i = parseInt(key.substring(5)) - 1;
     const id = Object.keys(store.data.characters)[i];
     if (id) store.selectCharacter(id);
   }
-  if (key === "KeyR" && store.currentCharacterID && player) {
+  if (key === "KeyR" && store.currentCharacterID && player && canRun(key)) {
     OBR.scene.items
       .updateItems([player], (p) => {
         if (p[0]) p[0].scale.x = -p[0].scale.x;
       })
       .catch(() => {});
   }
-  if (key === "KeyF" && store.currentCharacterID) {
+  if (key === "KeyF" && store.currentCharacterID && canRun(key)) {
     focus(store.currentCharacterID, false);
   }
-  if (key === "KeyQ") {
+  if (key === "KeyQ" && canRun(key)) {
     rotatePlayer(-1);
   }
-  if (key === "KeyE") {
+  if (key === "KeyE" && canRun(key)) {
     rotatePlayer(1);
   }
   if (

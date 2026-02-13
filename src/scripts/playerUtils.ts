@@ -17,5 +17,5 @@ export async function focus(id: string, select = true) {
         y: height / 2,
     });
     OBR.viewport.animateTo({ scale: scale, position: pos });
-    if (select) OBR.player.select([id]);
+    if (select) OBR.player.select([id]).catch(() => {});
 }
